@@ -13,7 +13,7 @@
 
 
 # Perceptron implementation
-import util
+import util, heapq
 PRINT = True
 
 class PerceptronClassifier:
@@ -87,9 +87,5 @@ class PerceptronClassifier:
         """
         Returns a list of the 100 features with the greatest weight for some label
         """
-        featuresWeights = []
-
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
-        return featuresWeights
+        return self.weights[label].sortedKeys()[:100]
