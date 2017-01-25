@@ -52,7 +52,7 @@ class MiraClassifier:
 
     def trainAndTune(self, trainingData, trainingLabels, validationData, validationLabels, Cgrid):
         """
-        This method sets self.weights using MIRA.  Train the classifier for each value of C in Cgrid,
+        This method sets self.weights using MIRA. Train the classifier for each value of C in Cgrid,
         then store the weights that give the best accuracy on the validationData.
 
         Use the provided self.weights[label] data structure so that
@@ -61,7 +61,41 @@ class MiraClassifier:
         representing a vector of values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        bestWeights = []
+        bestAccuracy = None
+        for c in Cgrid:
+            weights = self.weights.copy()
+            for n in range(self.max_iterations):
+                for i, datum in enumerate(trainingData):
+                    bestScore = None
+                    bestY = None
+                    for y in self.legalLabels:
+                        score = datum * weights[y]
+                        if score > bestScore or bestScore == None:
+                            bestScore = score
+                            bestY = y
+
+                    actualY = trainingLabels[i]
+                    if bestY != actualY:
+                        f = datum.copy()
+                        tau = min(c, ((weights[bestY] - weights[actualY]) * f + 1.0) / (2.0 * (f * f)))
+                        f.divideAll(1.0 / tau)
+                        
+                        weights[actualY] = weights[actualY] + f
+                        weights[bestY] = weights[bestY] - f
+            
+            # Check the accuracy associated with this c
+            correct = 0
+            guesses = self.classify(validationData)
+            for i, guess in enumerate(guesses):
+                correct += (validationLabels[i] == guess and 1.0 or 0.0)
+            accuracy = correct / len(guesses)
+            
+            if accuracy > bestAccuracy or bestAccuracy is None:
+                bestAccuracy = accuracy
+                bestWeights = weights
+    
+        self.weights = bestWeights
 
     def classify(self, data ):
         """
