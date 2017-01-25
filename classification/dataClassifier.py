@@ -73,12 +73,29 @@ def enhancedFeatureExtractorDigit(datum):
 
     ## DESCRIBE YOUR ENHANCED FEATURES HERE...
 
+    1. Horizontal symmetry. "horsym" = 1 if 30% or more of pixels are the same.
+
+    2. Vertical symmetry. "versym" = 1 if 30% or more of pixels are the same.
+
+    3. Emptiness of line. "empty[i]" = 1 if all pixels on the line are black.
+
+    4. Fullness of line. "full[i]" = 1 if all pixels on the line are white.
+
     ##
     """
     features =  basicFeatureExtractorDigit(datum)
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT):
+
+
+
+
+
+
+
 
     return features
 
