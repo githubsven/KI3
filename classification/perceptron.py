@@ -88,4 +88,5 @@ class PerceptronClassifier:
         Returns a list of the 100 features with the greatest weight for some label
         """
         "*** YOUR CODE HERE ***"
+        #simply return the first 100 keys from the sorted (according to the keys) weights list
         return self.weights[label].sortedKeys()[:100]
