@@ -40,14 +40,17 @@ class PerceptronClassifierPacman(PerceptronClassifier):
             guesses.append(vectors.argMax())
         return guesses
 
-
     def train( self, trainingData, trainingLabels, validationData, validationLabels ):
         self.features = trainingData[0][0]['Stop'].keys() # could be useful later
         # DO NOT ZERO OUT YOUR WEIGHTS BEFORE STARTING TRAINING, OR
         # THE AUTOGRADER WILL LIKELY DEDUCT POINTS.
 
+        labels = util.Counter()
         for iteration in range(self.max_iterations):
             print "Starting iteration ", iteration, "..."
-            for i in range(len(trainingData)):
+            for i, datum in enumerate(trainingData):
                 "*** YOUR CODE HERE ***"
-                util.raiseNotDefined()
+                guess = self.classify([datum])[0] #Extract the action (North, East, South, West)
+                if guess != trainingLabels[i]: #check if the guess was incorrect
+                    self.weights += datum[0][trainingLabels[i]] #update the shared weight if it was
+                    self.weights -= datum[0][guess]
