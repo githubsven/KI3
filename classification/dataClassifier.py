@@ -155,6 +155,7 @@ def enhancedFeatureExtractorDigit(datum):
     "*** YOUR CODE HERE ***"
     # util.raiseNotDefined()
 
+    # adds a feature, multiple times to give it more weight in the final decision
     def addFeature(name, value, time):
         features[name] = value
         for i in xrange(time):
@@ -162,6 +163,7 @@ def enhancedFeatureExtractorDigit(datum):
 
     TOTAL_PIXELS = DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT
 
+    # count all the pixels in the respective parts of the picture
     pixels = datum.getPixels()
     upper = sum([pixels[row][col] > 0 for row in xrange(DIGIT_DATUM_HEIGHT / 2)
                  for col in xrange(DIGIT_DATUM_WIDTH)])
@@ -171,23 +173,31 @@ def enhancedFeatureExtractorDigit(datum):
                 for col in xrange(DIGIT_DATUM_WIDTH / 2)])
     right = sum([pixels[row][col] > 0 for row in xrange(DIGIT_DATUM_WIDTH)
                  for col in xrange(DIGIT_DATUM_WIDTH / 2, DIGIT_DATUM_WIDTH)])
+
+    # add features compared to what halves have more white pixels
     addFeature('left', left > right, 2)
     addFeature('upper', upper > lower, 2)
 
+    # count the connected regions in the picture
     connectedRegionsCount = getPartitionNum(pixels)
     for i in xrange(1, 5):
+        # add a '1' when it's that amount of regions in the picture, drawback, no more than 5 connected regions could be counted
         addFeature('regions'+str(i), connectedRegionsCount == i, 6)
 
+    # check full vertical lines
     for y in range(DIGIT_DATUM_HEIGHT):
+        # check if line is empty
         pixelsInbinary = [bool(datum.getPixel(x, y)) for x in xrange(DIGIT_DATUM_WIDTH)]
         numBlackPixels = sum(pixelsInbinary)
         addFeature('empty'+str(y), numBlackPixels > 0, 3)
 
+        # check if there's a hole inbetween the sides
         leftEdge = ((DIGIT_DATUM_WIDTH-1)-pixelsInbinary[::-1].index(True)) if numBlackPixels else 0
         rightEdge = pixelsInbinary.index(True) if numBlackPixels else 0
         width = leftEdge - rightEdge
         addFeature('hole'+str(y), width + (width > 1) > numBlackPixels, 2)
 
+        # check horizontal symmetry (more than 30% of pixels the same = true)
         # hs: horizontal symmetrical
         hs = sum([pixels[x][y] > 0 and pixels[DIGIT_DATUM_WIDTH - 1 - x][y] > 0 for x in xrange(DIGIT_DATUM_WIDTH / 2)])
         addFeature('hs' + str(y), hs > 0.3*TOTAL_PIXELS/2, 2)
