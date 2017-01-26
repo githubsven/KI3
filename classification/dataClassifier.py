@@ -125,24 +125,34 @@ def enhancedFeatureExtractorDigit(datum):
     def holes(features):
 
         def neighboring(x, y):
-            list = ((min(x + 1, DIGIT_DATUM_WIDTH), y), (max(x - 1, DIGIT_DATUM_WIDTH), y), (x, min(y + 1, DIGIT_DATUM_HEIGHT)), (x, max(y - 1, DIGIT_DATUM_HEIGHT)))
-            return {(i, j) for i, j in list if features[(i, j)] == features[(x, y)]}
+            print(x, y)
+            list = [(min(x + 1, DIGIT_DATUM_WIDTH), y), (max(x - 1, 0), y), (x, min(y + 1, DIGIT_DATUM_HEIGHT)), (x, max(y - 1, 0))]
+            return [(i, j) for i, j in list if features[(i, j)] == features[(x, y)]]
 
         def unvisitedNeigbors(x, y, visitedPixels):
-            return {(x, y) for x, y in neighboring(x, y) if (x, y) not in visitedPixels}
+            return [(x, y) for x, y in neighboring(x, y) if (x, y) not in visitedPixels]
 
         def visitNeighbors(x, y, visitedPixels):
-            return visitedPixels + unvisitedNeigbors(x, y ,visitedPixels)
+            return [(x, y)] + visitedPixels + unvisitedNeigbors(x, y ,visitedPixels)
 
         def visitAllNeighbors(x, y, visitedPixels):
             neighbors = util.Queue()
-            neighbors.push(unvisitedNeigbors(x, y, visitedPixels))
+
+            unvis = unvisitedNeigbors(x, y, visitedPixels)
+            for i in range(len(unvis)):
+                neighbors.push(unvis[i])
+
             a, b = neighbors.pop()
+            #print(a, b)
 
             while not(neighbors.isEmpty()):
                 visitedPixels = visitNeighbors(a, b, visitedPixels)
-                neighbors.push(unvisitedNeigbors(a, b, visitedPixels))
-                a, b = neighbors.pop()
+
+                unvis = unvisitedNeigbors(x, y, visitedPixels)
+                for i in range(len(unvis)):
+                    neighbors.push(unvis[i])
+
+                a = neighbors.pop()
 
             return visitedPixels
 
