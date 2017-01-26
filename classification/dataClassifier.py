@@ -130,10 +130,10 @@ def enhancedFeatureExtractorDigit(datum):
             return [(i, j) for i, j in list if features[(i, j)] == features[(x, y)]]
 
         def unvisitedNeigbors(x, y, visitedPixels):
-            return [(x, y) for x, y in neighboring(x, y) if (x, y) not in visitedPixels]
+            return [(a, b) for (a, b) in neighboring(x, y) if (a, b) not in visitedPixels]
 
         def visitNeighbors(x, y, visitedPixels):
-            return [(x, y)] + visitedPixels + unvisitedNeigbors(x, y ,visitedPixels)
+            return visitedPixels + [(x, y)] + unvisitedNeigbors(x, y ,visitedPixels)
 
         def visitAllNeighbors(x, y, visitedPixels):
             neighbors = util.Queue()
@@ -142,7 +142,7 @@ def enhancedFeatureExtractorDigit(datum):
             for i in range(len(unvis)):
                 neighbors.push(unvis[i])
 
-            a, b = neighbors.pop()
+            (a, b) = neighbors.pop()
             #print(a, b)
 
             while not(neighbors.isEmpty()):
