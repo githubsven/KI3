@@ -81,17 +81,58 @@ def enhancedFeatureExtractorDigit(datum):
 
     4. Fullness of line. "full[i]" = 1 if all pixels on the line are white.
 
+    5. Amount of connected unfilled surfaces (holes). "hole[i]" = 1
+
     ##
     """
+
     features =  basicFeatureExtractorDigit(datum)
 
     "*** YOUR CODE HERE ***"
 
-    util.raiseNotDefined()
+    def horsymcheck(features):
+        counter = 0
+        for x in range(DIGIT_DATUM_WIDTH):
+            for y in range(DIGIT_DATUM_HEIGHT / 2):
+                if features[(x, y)] == features[(x, DIGIT_DATUM_HEIGHT - y)]:
+                    counter += 1
+        if counter > DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT * 0.3:
+            return 1
+        return 0
 
-    for x in range(DIGIT_DATUM_WIDTH):
+    def versymcheck(features):
+        counter = 0
+        for x in range(DIGIT_DATUM_WIDTH / 2):
+            for y in range(DIGIT_DATUM_HEIGHT):
+                if features[(x, y)] == features[(DIGIT_DATUM_WIDTH) - x, y]:
+                    counter += 1
+        if counter > DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT * 0.3:
+            return 1
+        return 0
+
+    def empty(features, i):
         for y in range(DIGIT_DATUM_HEIGHT):
-            features[(x,y)] = 0
+            if features[(i, y)] == 1:
+                return 0
+        return 1
+
+    def full(features, i):
+        for y in range(DIGIT_DATUM_HEIGHT):
+            if features[(i, y)] == 0:
+                return 0
+        return 1
+
+    def holes(features):
+
+
+    features['horsym'] = horsymcheck(features)
+    features['versym'] = versymcheck(features)
+
+    for i in range(DIGIT_DATUM_WIDTH):
+        features['empty'+str(i)] = empty(features, i)
+
+    for i in range(DIGIT_DATUM_WIDTH):
+        features['full'+str(i)] = empty(features, i)
 
     return features
 
