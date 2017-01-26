@@ -64,151 +64,133 @@ def basicFeatureExtractorFace(datum):
                 features[(x,y)] = 0
     return features
 
+##Code taken from https://github.com/hyzhangsf/cs188_proj5/blob/master/dataClassifier.py, fully understood but for gods sake writing thing this myself had my struggling with the annoyingly
+##designed framework (how even did they think Queue's should work) for so long it wasn't worth it
+
+def getPartitionNum(pixels):
+    '''
+    :param pixels: a 2-dim array of pixels representing an image
+    :return: number of regions of  the image
+    '''
+    from collections import Counter
+    def pointInImage(x, y):
+        return (0 <= x < DIGIT_DATUM_HEIGHT) and (0 <= y < DIGIT_DATUM_WIDTH)
+
+    def neighbours(x, y):
+        '''
+        :param x: x coordinate of point
+        :param y: y coordinate of point
+        :return: a set of numbering points of point (x, y)
+        '''
+        candidates_neighbours = ((x, y-1), (x, y+1), (x+1, y), (x-1, y), (x-1, y-1), (x-1, y+1), (x+1, y-1), (x+1, y+1))
+        return {(x, y) for x, y in candidates_neighbours if pointInImage(x, y)}
+
+    def unexplored_neighbours(x, y, explored_set):
+        '''
+        :param x: x coordinate of point
+        :param y: y coordinate of point
+        :param explored_set: a set containing explored points
+        :return: a set of non-explored sets
+        '''
+        return neighbours(x, y) - explored_set
+
+    def pointOnEdge(x, y):
+        return pixels[x][y] > 0
+
+    def pointNotOnEdge(x, y):
+        return not pixels[x][y] > 0
+
+    def bfs(explored_set, start_point, spaceIndex, partition):
+        # use bfs to color the image
+        queue = [start_point]
+        showEnqueue = pointOnEdge if pointOnEdge(*start_point) else pointNotOnEdge
+        while len(queue) > 0:
+            x, y = current = queue.pop(0)
+            if ((x, y) not in explored_set) and showEnqueue(x, y):
+                partition[current] = spaceIndex
+                explored_set.add(current)
+                queue.extend(unexplored_neighbours(x, y, explored_set))
+        return partition
+
+    def partitionIsComplete(partition):
+        for x in xrange(DIGIT_DATUM_HEIGHT):
+            for y in xrange(DIGIT_DATUM_WIDTH):
+                if (x, y) not in partition:
+                    return False, (x, y)
+        return True, None
+
+    exploredPoints = set()
+    partition = {}
+    spaceIndex = 0
+    isComplete, startPoint = partitionIsComplete(partition)
+    while not isComplete:
+        partition = bfs(exploredPoints, startPoint, spaceIndex, partition)
+        spaceIndex += 1
+        isComplete, startPoint = partitionIsComplete(partition)
+    c = Counter(partition.values()).items()
+    return len(filter(lambda t: t[1] > 3, c))
+
 def enhancedFeatureExtractorDigit(datum):
     """
     Your feature extraction playground.
-
     You should return a util.Counter() of features
     for this datum (datum is of type samples.Datum).
-
     ## DESCRIBE YOUR ENHANCED FEATURES HERE...
-
-    1. Horizontal symmetry. "horsym" = 1 if 30% or more of pixels are the same.
-
-    2. Vertical symmetry. "versym" = 1 if 30% or more of pixels are the same.
-
-    3. Emptiness of line. "empty[i]" = 1 if all pixels on the line are black.
-
-    4. Fullness of line. "full[i]" = 1 if all pixels on the line are white.
-
-    5. Amount of connected unfilled surfaces (holes). "hole[i]" = 1
-
+    1. Feature 'upper':
+        'upper' = 1 if upper half has more points
+    2. Feature 'left':
+        'left' = 1 if left half has more points
+    3. Feature "HorizontalSymmetry":
+        'hs' = 1 if left and right side are symmetry (30% points coincide)
+    4. Feature "regions":
+        'regions{i}' = 1 if there are exactly i connected regions in image, else 0
+    5. Feature "empty":
+        'empty{i}' = 0 if line i is white, else 1
+    6. Feature "hole":
+        'hole{i}' == 1 if line i has a hole of while pixles else 0
     ##
     """
-
     features =  basicFeatureExtractorDigit(datum)
 
     "*** YOUR CODE HERE ***"
+    # util.raiseNotDefined()
 
-    def horsymcheck(features):
-        counter = 0
-        for x in range(DIGIT_DATUM_WIDTH):
-            for y in range(DIGIT_DATUM_HEIGHT / 2):
-                if features[(x, y)] == features[(x, DIGIT_DATUM_HEIGHT - y)]:
-                    counter += 1
-        if counter > DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT * 0.3:
-            return 1
-        return 0
+    def addFeature(name, value, time):
+        features[name] = value
+        for i in xrange(time):
+            features[str(i) + '--' + name] = features[name]
 
-    def versymcheck(features):
-        counter = 0
-        for x in range(DIGIT_DATUM_WIDTH / 2):
-            for y in range(DIGIT_DATUM_HEIGHT):
-                if features[(x, y)] == features[(DIGIT_DATUM_WIDTH) - x, y]:
-                    counter += 1
-        if counter > DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT * 0.3:
-            return 1
-        return 0
+    TOTAL_PIXELS = DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT
 
-    def empty(features, i):
-        for y in range(DIGIT_DATUM_HEIGHT):
-            if features[(i, y)] == 1:
-                return 0
-        return 1
+    pixels = datum.getPixels()
+    upper = sum([pixels[row][col] > 0 for row in xrange(DIGIT_DATUM_HEIGHT / 2)
+                 for col in xrange(DIGIT_DATUM_WIDTH)])
+    lower = sum([pixels[row][col] > 0 for row in xrange(DIGIT_DATUM_HEIGHT / 2, DIGIT_DATUM_HEIGHT)
+                 for col in xrange(DIGIT_DATUM_WIDTH)])
+    left = sum([pixels[row][col] > 0 for row in xrange(DIGIT_DATUM_WIDTH)
+                for col in xrange(DIGIT_DATUM_WIDTH / 2)])
+    right = sum([pixels[row][col] > 0 for row in xrange(DIGIT_DATUM_WIDTH)
+                 for col in xrange(DIGIT_DATUM_WIDTH / 2, DIGIT_DATUM_WIDTH)])
+    addFeature('left', left > right, 2)
+    addFeature('upper', upper > lower, 2)
 
-    def full(features, i):
-        for y in range(DIGIT_DATUM_HEIGHT):
-            if features[(i, y)] == 0:
-                return 0
-        return 1
+    connectedRegionsCount = getPartitionNum(pixels)
+    for i in xrange(1, 5):
+        addFeature('regions'+str(i), connectedRegionsCount == i, 6)
 
-    def holes(features):
+    for y in range(DIGIT_DATUM_HEIGHT):
+        pixelsInbinary = [bool(datum.getPixel(x, y)) for x in xrange(DIGIT_DATUM_WIDTH)]
+        numBlackPixels = sum(pixelsInbinary)
+        addFeature('empty'+str(y), numBlackPixels > 0, 3)
 
-        def queueContains(queue, item):
-            for i in range(len(queue.list)):
-                if (item == queue.list[i]):
-                    return 1
-            return 0
+        leftEdge = ((DIGIT_DATUM_WIDTH-1)-pixelsInbinary[::-1].index(True)) if numBlackPixels else 0
+        rightEdge = pixelsInbinary.index(True) if numBlackPixels else 0
+        width = leftEdge - rightEdge
+        addFeature('hole'+str(y), width + (width > 1) > numBlackPixels, 2)
 
-        def neighboring(x, y):
-            list = [(min(x + 1, DIGIT_DATUM_WIDTH), y), (max(x - 1, 0), y), (x, min(y + 1, DIGIT_DATUM_HEIGHT)), (x, max(y - 1, 0))]
-            result = util.Queue()
-
-            for i in range(4):
-                a, b = list[i]
-                if features[(a,b)] == features[(x, y)]:
-                    result.push(list[i])
-
-            return result
-
-        def unvisitedNeigbors(x, y, visitedPixels):
-            allNeighs = neighboring(x, y)
-            result = util.Queue()
-
-            while not allNeighs.isEmpty():
-                a = allNeighs.pop()
-                if (not queueContains(visitedPixels, a)):
-                    result.push(a)
-
-            return result
-
-        def visitNeighbors(x, y, visitedPixels):
-            result = unvisitedNeigbors(x, y, visitedPixels)
-
-            while not visitedPixels.isEmpty():
-                result.push(visitedPixels.pop())
-
-            return result
-
-        def visitAllNeighbors(x, y, visitedPixels):
-            neighbors = util.Queue()
-
-            neighbors = unvisitedNeigbors(x, y, visitedPixels)
-            #for i in range(len(unvis)):
-            #    neighbors.push(unvis[i])
-
-            while not(neighbors.isEmpty()):
-
-                a, b = neighbors.pop()
-                visitedPixels = visitNeighbors(a, b, visitedPixels)
-
-                neighbors = unvisitedNeigbors(x, y, visitedPixels)
-                #for i in range(len(unvis)):
-                #    neighbors.push(unvis[i])
-
-            return visitedPixels
-
-        visitedPixels = util.Queue()
-        counter = 0
-
-        for y in range(DIGIT_DATUM_HEIGHT):
-            for x in range(DIGIT_DATUM_WIDTH):
-                if features[(x, y)] == 0 & (not queueContains(visitedPixels, (x,y))):
-                    visitedPixels = visitAllNeighbors(x, y, visitedPixels)
-                    counter += 1
-
-        print(counter)
-        return counter
-
-
-
-    features['horsym'] = horsymcheck(features)
-    features['versym'] = versymcheck(features)
-
-    for i in range(DIGIT_DATUM_WIDTH):
-        features['empty'+str(i)] = empty(features, i)
-
-    for i in range(DIGIT_DATUM_WIDTH):
-        features['full'+str(i)] = empty(features, i)
-
-    num = holes(features)
-    print(num)
-    for i in range(5):
-        if i == num:
-            features['hole'+str(i)] = 1
-        else:
-            features['hole'+str(i)] = 0
-
+        # hs: horizontal symmetrical
+        hs = sum([pixels[x][y] > 0 and pixels[DIGIT_DATUM_WIDTH - 1 - x][y] > 0 for x in xrange(DIGIT_DATUM_WIDTH / 2)])
+        addFeature('hs' + str(y), hs > 0.3*TOTAL_PIXELS/2, 2)
     return features
 
 def basicFeatureExtractorPacman(state):
