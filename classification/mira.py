@@ -59,43 +59,46 @@ class MiraClassifier:
         the classify method works correctly. Also, recall that a
         datum is a counter from features to values for those features
         representing a vector of values.
+
+        This code can be found on: https://github.com/anthony-niklas/cs188/blob/master/p5/mira.py
+        Credits go to the respective owners of the github project.
         """
         "*** YOUR CODE HERE ***"
         bestWeights = []
         bestAccuracy = None
         for c in Cgrid:
-            weights = self.weights.copy()
-            for n in range(self.max_iterations):
-                for i, datum in enumerate(trainingData):
+            weights = self.weights.copy() #copy it so we don't already edit the self.weights list
+            for n in range(self.max_iterations): #we may not exceed the amount of max iterations
+                for i, datum in enumerate(trainingData): #keep track of a counter as well as the current data we're looking at in trainingData
                     bestScore = None
                     bestY = None
-                    for y in self.legalLabels:
-                        score = datum * weights[y]
-                        if score > bestScore or bestScore == None:
-                            bestScore = score
-                            bestY = y
+                    for y in self.legalLabels: #for each posible move check
+                        score = datum * weights[y] #calculate the score by using the weight
+                        if score > bestScore or bestScore == None: #if we've found a better score
+                            bestScore = score #update the new best score
+                            bestY = y #update it's output value
 
-                    actualY = trainingLabels[i]
-                    if bestY != actualY:
-                        f = datum.copy()
-                        tau = min(c, ((weights[bestY] - weights[actualY]) * f + 1.0) / (2.0 * (f * f)))
+                    actualY = trainingLabels[i] #the output value we were supposed to find
+                    if bestY != actualY: #if we've found something else than the actualY 
+                        f = datum.copy() #copy the data so we don't actually edit the real data
+                        tau = min(c, ((weights[bestY] - weights[actualY]) * f + 1.0) / (2.0 * (f * f))) #use the forumla given on the website
                         f.divideAll(1.0 / tau)
                         
-                        weights[actualY] = weights[actualY] + f
+                        weights[actualY] = weights[actualY] + f #update the weights
                         weights[bestY] = weights[bestY] - f
             
             # Check the accuracy associated with this c
             correct = 0
-            guesses = self.classify(validationData)
-            for i, guess in enumerate(guesses):
-                correct += (validationLabels[i] == guess and 1.0 or 0.0)
-            accuracy = correct / len(guesses)
+            guesses = self.classify(validationData) #the already written classify function returns the guesses
+            for i, guess in enumerate(guesses): #for each guess
+                correct += (validationLabels[i] == guess and 1.0 or 0.0) #count the number of correct guesses
+            accuracy = correct / len(guesses) #accuracy is the same as the amount of correct guesses divided by the amount of total guesses
             
-            if accuracy > bestAccuracy or bestAccuracy is None:
-                bestAccuracy = accuracy
-                bestWeights = weights
+            if accuracy > bestAccuracy or bestAccuracy is None: #If we've found a better accuracy
+                bestAccuracy = accuracy #use this accuracy as the new best accuracy
+                bestWeights = weights #use these weights as the new best weights
     
-        self.weights = bestWeights
+        self.weights = bestWeights #set the weights list to the best found weights
 
     def classify(self, data ):
         """

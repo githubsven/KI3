@@ -95,8 +95,6 @@ def enhancedFeatureExtractorDigit(datum):
 
     return features
 
-
-
 def basicFeatureExtractorPacman(state):
     """
     A basic feature extraction function.
@@ -136,8 +134,29 @@ def enhancedPacmanFeatures(state, action):
     It should return a counter with { <feature name> : <feature value>, ... }
     """
     features = util.Counter()
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    nextState = state.generateSuccessor(0, action) #generate the state pacman is in after he has taken the action
+    pacPos = nextState.getPacmanPosition() #Pacman's position
+    ghostPos = nextState.getGhostPositions() #List of ghost positions
+
+    features['score'] = nextState.getScore() #The score assigned to a state
+
+    minGhostDistance = None 
+    for ghost in ghostPos: #for each position of a ghost
+        ghostDistance = util.manhattanDistance(pacPos, ghost) #get the distance between pacman and the ghost
+        if minGhostDistance == None or ghostDistance < minGhostDistance: #store the shortest distance between pacman and a ghost
+            minGhostDistance = ghostDistance
+    features['ghostDistance'] = minGhostDistance if minGhostDistance != None else 0 #use 0 as distance if there are no ghosts
+
+    #the same functionality as for ghosts, but now for food
+    minFoodDistance = None
+    for foodPos in nextState.getFood().asList(): 
+        foodDistance = util.manhattanDistance(pacPos, foodPos)
+        if minFoodDistance == None or foodDistance < minFoodDistance:
+            minFoodDistance = foodDistance
+    features['foodDistance'] = minFoodDistance if minFoodDistance != None else 0
+
+    features['foodLeft'] = nextState.getNumFood() #The amount of food pellets left in the game
+
     return features
 
 

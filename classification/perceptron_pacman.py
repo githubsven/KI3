@@ -50,7 +50,7 @@ class PerceptronClassifierPacman(PerceptronClassifier):
             print "Starting iteration ", iteration, "..."
             for i, datum in enumerate(trainingData):
                 "*** YOUR CODE HERE ***"
-                guess = self.classify([datum])[0] #Extract the action (North, East, South, West)
+                guess = self.classify([datum])[0] #Extract the guessed action (North, East, South, West)
                 if guess != trainingLabels[i]: #check if the guess was incorrect
-                    self.weights += datum[0][trainingLabels[i]] #update the shared weight if it was
+                    self.weights += datum[0][trainingLabels[i]] #update the shared weight
                     self.weights -= datum[0][guess]
