@@ -124,6 +124,40 @@ def enhancedFeatureExtractorDigit(datum):
 
     def holes(features):
 
+        def neighboring(x, y):
+            list = ((min(x + 1, DIGIT_DATUM_WIDTH), y), (max(x - 1, DIGIT_DATUM_WIDTH), y), (x, min(y + 1, DIGIT_DATUM_HEIGHT)), (x, max(y - 1, DIGIT_DATUM_HEIGHT)))
+            return {(i, j) for i, j in list if features[(i, j)] == features[(x, y)]}
+
+        def unvisitedNeigbors(x, y, visitedPixels):
+            return {(x, y) for x, y in neighboring(x, y) if (x, y) not in visitedPixels}
+
+        def visitNeighbors(x, y, visitedPixels):
+            return visitedPixels + unvisitedNeigbors(x, y ,visitedPixels)
+
+        def visitAllNeighbors(x, y, visitedPixels):
+            neighbors = util.Queue()
+            neighbors.push(unvisitedNeigbors(x, y, visitedPixels))
+            a, b = neighbors.pop()
+
+            while not(neighbors.isEmpty()):
+                visitedPixels = visitNeighbors(a, b, visitedPixels)
+                neighbors.push(unvisitedNeigbors(a, b, visitedPixels))
+                a, b = neighbors.pop()
+
+            return visitedPixels
+
+        visitedPixels = []
+        counter = 0
+
+        for y in range(DIGIT_DATUM_HEIGHT):
+            for x in range(DIGIT_DATUM_WIDTH):
+                if features[(x, y)] == 0 & ((x, y) not in visitedPixels):
+                    visitedPixels = visitAllNeighbors(x, y, visitedPixels)
+                    counter += 1
+
+        return counter
+
+
 
     features['horsym'] = horsymcheck(features)
     features['versym'] = versymcheck(features)
@@ -133,6 +167,13 @@ def enhancedFeatureExtractorDigit(datum):
 
     for i in range(DIGIT_DATUM_WIDTH):
         features['full'+str(i)] = empty(features, i)
+
+    num = holes(features)
+    for i in range(5):
+        if i == num:
+            features['hole'+str(i)] = 1
+        else:
+            features['hole'+str(i)] = 0
 
     return features
 
