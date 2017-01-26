@@ -87,15 +87,11 @@ def enhancedFeatureExtractorDigit(datum):
 
     "*** YOUR CODE HERE ***"
 
+    util.raiseNotDefined()
+
     for x in range(DIGIT_DATUM_WIDTH):
         for y in range(DIGIT_DATUM_HEIGHT):
-
-
-
-
-
-
-
+            features[(x,y)] = 0
 
     return features
 
