@@ -125,9 +125,8 @@ def enhancedFeatureExtractorDigit(datum):
     def holes(features):
 
         def queueContains(queue, item):
-            while not queue.isEmpty():
-                x = queue.pop()
-                if (item == x):
+            for i in range(len(queue.list)):
+                if (item == queue.list[i]):
                     return 1
             return 0
 
@@ -149,7 +148,6 @@ def enhancedFeatureExtractorDigit(datum):
             while not allNeighs.isEmpty():
                 a = allNeighs.pop()
                 if (not queueContains(visitedPixels, a)):
-                    print("visited"+str(a))
                     result.push(a)
 
             return result
